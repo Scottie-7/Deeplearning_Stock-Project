@@ -1,0 +1,19 @@
+# Dataset index for Stock Project — see report_ps3.pdf §3 for full description
+
+1. FI-2010 Benchmark Dataset (Phase 1 Validation)
+   Source: Ntakaris et al. (2018), Journal of Forecasting
+   Download: https://etsin.fairdata.fi/dataset/73eb48d7-4dbc-4a10-a52a-da745b47a649/data
+   License: CC BY 4.0
+   Format: Plain text (.txt), ~1.74 GB total
+
+2. Databento Historical Pull (Phase 1.5 Bridging)
+   Source: Databento API — consolidated Level 1 quotes + Nasdaq TotalView-ITCH (Level 2) history
+   Storage: Google Drive — [link when pulled]
+   Format: DBN / Parquet
+   Status: Data credits allocated; historical pull pending for screened small-cap stocks
+
+3. Self-Recorded U.S. Equity Data (Phase 2 Primary)
+   Source: Custom ingestion engine (Moomoo, IBKR, Tastytrade, yfinance) — see /src
+   Storage: Google Drive — [link when setup fully, still testing code]
+   Format: Parquet (partitioned by date, session, and symbol)
+   Status: Engine under active development; recording begins pending API buffering fixes from multiple broker API's to dashboard/storage
