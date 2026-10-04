@@ -1,24 +1,26 @@
-# Credentials & Environment
+# --- Environments & secrets ---
 .env
-*.env
-
-# Python & Virtual Environments
-__pycache__/
-*.py[cod]
+.env.*
 venv/
 .venv/
 env/
 
-# Data Files & Storage (Exclude raw dumps, preserve data/data.txt)
-*.csv
-*.parquet
-*.h5
-*.db
-*.sqlite
-data/*
-!data/data.txt
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+build/
+dist/
+.pytest_cache/
 
-# IDEs & System
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
 .vscode/
 .idea/
-.DS_Store
+
+# --- Generated / local data (kept in Drive, not git — see data/data.txt) ---
+*.parquet
+*.log
+recordings/
