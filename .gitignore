@@ -1,0 +1,24 @@
+# Credentials & Environment
+.env
+*.env
+
+# Python & Virtual Environments
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+env/
+
+# Data Files & Storage (Exclude raw dumps, preserve data/data.txt)
+*.csv
+*.parquet
+*.h5
+*.db
+*.sqlite
+data/*
+!data/data.txt
+
+# IDEs & System
+.vscode/
+.idea/
+.DS_Store
