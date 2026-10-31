@@ -1,88 +1,82 @@
-# Deep Learning Stock Project — Data Pipeline, Preprocessing & Baseline Engine
+# Deep Learning Stock Project: Data Pipeline, Preprocessing & Baseline Engine
 
-**Author:** Scottie Dunnavan  
-**Course:** CSCI 4425/5425 Introduction to Deep Learning  
+**Author:** Scottie Dunnavan
+**Course:** CSCI 4425/5425 Introduction to Deep Learning
 
-This repository contains the dataset specifications, live broker ingestion adapters, crash-safe Parquet persistence layer, and Limit Order Book (LOB) preprocessing and feature-engineering pipeline for the Stock Project. For full architectural context, see `report_ps4.pdf` and `report_ps3.pdf` in the repository root.
+Dataset specs, live broker adapters, crash-safe Parquet persistence, and LOB preprocessing and feature pipeline for the Stock Project. Architecture context: `report_ps5.pdf` (Stage 5), `report_ps4.pdf` (Stage 4), `report_ps3.pdf` (Stage 3).
 
 ## Repository Layout
 
-- `data/data.txt`: Dataset download links and specifications, including the FI-2010 benchmark, Databento historical ITCH data pull, and self-recorded live U.S. small-cap data.
-- `src/`: Runnable Python source code for LOB data preprocessing, atomic Parquet recording, microstructure feature extraction, Triple-Barrier labeling, preliminary baseline evaluation, and live broker streaming.
-- `report_ps4.pdf`: Stage 4 project report covering the updated problem formulation, refined wide Parquet schemas, preprocessing implementation, and preliminary baseline solution.
-- `report_ps3.pdf`: Stage 3 dataset description report.
+- `data/data.txt`: dataset links and specs (FI-2010, Databento ITCH pull, self-recorded U.S. small-cap live data).
+- `src/`: preprocessing, Parquet recording, features, labeling, baselines, live streaming.
+- `report_ps5.pdf`: Stage 5 report. `report_ps4.pdf`, `report_ps3.pdf`: earlier stages.
 
-## Market Data & Preprocessing Engine (`src/`)
+## Current Status: Stage 5 (`ps5-sol2`)
 
-### Current Status: Stage 4 (`ps4-sol1`)
+Implemented:
+- Atomic `.parquet` writes (temp file, then `os.replace()`) with zstd. `l1_quotes` (18 columns) and wide `l2_snapshots` (47 columns, 10 levels, `session`, `book_age_ms`).
+- Lee-Ready trade side (+1 / -1 / 0) with tick-test fallback.
+- Features: relative price distance, 10-level price-keyed OFI, AIR (single-venue definition and threshold flags pending), micro-price divergence.
+- Triple-barrier labels (Down=0, Neutral=1, Up=2), 50-tick horizon, 15 bps minimum barrier.
+- Tensors: spatial (Batch, 1, 100, 40), auxiliary flow (Batch, 100, 16), tabular (Batch, 56).
+- Chronological 70/30 split with a 50-sample purge.
+- Models: majority-class, Random Forest (150 trees, balanced), MLP (128, 64). Metrics: macro-F1, per-class F1, 3x3 confusion matrix.
 
-1. **Runnable Preprocessing, Parquet Persistence & Preliminary Baseline (`src/preprocessing.py` and `src/main.py`):**
-   - Fully functional out of the box, with **zero external API keys required**.
-   - Crash-safe atomic `.parquet` writes for `l1_quotes` and 45-column flat, wide `l2_snapshots`.
-   - Deterministic Lee-Ready `trade_side` aggressor classification (`+1` / `-1`).
-   - 100 ms software grid alignment.
-   - Microstructure feature extraction:
-     - Relative Price Distance (`RelPriceDist`).
-     - 10-level Multi-Level Order Flow Imbalance (`MLOFI`).
-     - Absorption & Iceberg Ratio (`AIR` — Absorption vs. Spoof ratio).
-     - Micro-Price Divergence.
-   - Spread-Adjusted Triple-Barrier labeling (`Down = 0`, `Neutral = 1`, `Up = 2`).
-   - Sliding-window tensor construction:
-     - DeepLOB 4D Tensor: `(Batch, 1, 100, 40)`.
-     - Tabular Baselines 2D Matrix: `(Batch, 46)`.
-   - Chronological Random Forest baseline evaluation, reporting Macro-F1 and a 3x3 confusion matrix.
+Not implemented: LSTM-Attention and DeepLOB (PyTorch), temperature scaling and ECE, locked v1.2 shapes (Batch, 63), (Batch, 60, 10), (Batch, 1, 600, 40) with (Batch, 600, 20), venue-matched AIR and its flags (ICEBERG_ABSORPTION, UNEXECUTED_DEPLETION), 5-minute buffered flush and bounded queue. Full list: report Section 6.
 
-2. **Live Broker Ingestion (`src/providers/`):**
-   - Tastytrade OAuth2 Level 1 (L1) streaming, implemented in `tastytrade.py`, is available through the `--live` flag when a local `.env` file is configured.
-
-### File Structure (`src/`)
+## File Structure (`src/`)
 
 | File | Purpose |
 | :--- | :--- |
-| `src/main.py` | Entry point. Runs the self-contained Stage 4 preprocessing, Parquet persistence, tensor construction, and baseline evaluation pipeline by default, without requiring API keys. Supports `--live` for live Tastytrade streaming. |
-| `src/preprocessing.py` | Stage 4 core solution: atomic `.tmp` to `os.replace()` Parquet writer using Zstandard (`zstd`), Lee-Ready quote-and-tick classifier, `RelPriceDist` / `MLOFI` / `AIR` / Micro-Price feature calculators, Spread-Adjusted Triple-Barrier labeler, and chronological baseline evaluator. |
+| `src/main.py` | Entry point. Runs the offline pipeline by default, no API keys. `--live` starts Tastytrade streaming. |
+| `src/preprocessing.py` | Parquet writer, Lee-Ready classifier, feature calculators, triple-barrier labeler, chronological evaluator. |
 | `src/providers/__init__.py` | Provider package initializer. |
-| `src/providers/base.py` | `MarketDataSource` abstract base interface, defining `connect` and `stream_data` methods implemented by broker adapters. |
-| `src/providers/tastytrade.py` | Tastytrade OAuth2 integration and live L1 quote-polling adapter. |
+| `src/providers/base.py` | `MarketDataSource` abstract interface (`connect`, `stream_data`). |
+| `src/providers/tastytrade.py` | Tastytrade OAuth2 and live L1 adapter. |
 
 ## Setup & Execution
 
-### 1. Install Dependencies
-From the repository root, navigate to `src/`, create a virtual environment, activate it, and install the dependencies:
+### 1. Install
 
     cd src
     python -m venv venv
     source venv/bin/activate  # Windows: .\venv\Scripts\Activate.ps1
-    pip install numpy pyarrow scikit-learn aiohttp websockets python-dotenv rich
+    pip install numpy pyarrow scikit-learn
 
-*Note:* `preprocessing.py` also includes pure-NumPy fallbacks if `pyarrow` or `scikit-learn` are unavailable in a minimal grading environment.
+Live mode only: `pip install aiohttp websockets python-dotenv rich`
 
-### 2. Run Stage 4 Preprocessing & Preliminary Baseline (Default — No `.env` or API Keys Required)
-From the `src/` directory, run:
+`preprocessing.py` has pure-NumPy fallbacks if `pyarrow` or `scikit-learn` is missing.
 
+### 2. Run (default, no `.env` or API keys)
+
+    cd src
     python main.py
 
-This runs the end-to-end verification pipeline, writes atomic `.parquet` partitions under `src/recordings/`, constructs the 4D DeepLOB and 2D baseline feature arrays, fits the chronological baseline model, and prints the 8-step verification report to the terminal, including Macro-F1 and the 3x3 confusion matrix.
+Writes Parquet partitions to `src/recordings/` and prints the model comparison table and confusion matrices (Majority, Random Forest, MLP). Data is synthetic. The generator ties order-book imbalance and trade side to the next price move, so scores verify the pipeline runs end to end, not market predictability. See report Section 5.
 
-### 3. Run Live Tastytrade L1 Streaming (Optional — Requires Local `.env`)
+### 3. Live Tastytrade L1 Streaming (optional)
 
-**Why Live API Sessions Are Isolated from Default Execution:**  
-Brokerage APIs and local gateways—including Interactive Brokers TWS/IB Gateway, Moomoo OpenD, Webull, and Tastytrade OAuth grants—enforce single-active-session or single-device restrictions and maintain token-refresh state. Because the live data recorder is designed to operate continuously across premarket, regular, and after-hours sessions (4:00 AM–8:00 PM ET) as well as overnight windows, sharing live `.env` credentials or triggering concurrent external logins during grading could cause session-conflict disconnects or invalidate active recording tokens. Therefore, default execution (`python main.py`) is strictly isolated from external brokerage sessions and runs the self-contained verification pipeline.
+Brokerage sessions enforce single-active-session or single-device limits, and live recording runs across premarket, regular, and after-hours sessions. Sharing `.env` credentials during grading could disconnect the recorder or invalidate its token. Default execution is therefore isolated from broker sessions.
 
-To run the live Tastytrade streamer locally, create a Git-ignored `src/.env` file containing your own credentials:
+Create a git-ignored `src/.env`:
 
     TASTY_CLIENT_ID=your_client_id
     TASTY_CLIENT_SECRET=your_client_secret
     TASTY_REFRESH_TOKEN=your_refresh_token
     TASTY_ENV=production
 
-*Security note:* Never commit your `.env` file, API credentials, client secrets, or refresh tokens to GitHub.
-
-To start live streaming from the `src/` directory, run:
+Never commit `.env`, client secrets, or refresh tokens. Start streaming:
 
     python main.py --live
 
+## Known Issues
+
+- Default barrier multiplier is `k_vol=0.45`. The locked spec uses initial `k=1.0`, fit on the train split. Align before V2.
+- A level that vanishes without scrolling out of the top 10 is assigned to the nearest current level (OFI approximation).
+- Stage 5 code has not been executed end to end. Confirm `python main.py` runs before relying on this README's claims.
+
 ## Next Milestones (Stage 1A / 1B Roadmap)
-- **Full Multi-Venue Recorder & Tier Engine:** Expand `providers/` with Moomoo `OpenD` (NYSE ArcaBook L2) and IBKR `ib_async` (Nasdaq TotalView L2) under the 600-second minimum L2 dwell lock and dual-pool slot router.
-- **NMSU `simurgh` H100 Training Runs:** Execute full-scale `RF/XGBoost`, `LSTM/TFT` (60-minute 1m bar lookback), and `DeepLOB` (60-second 100ms L2 lookback with FI-2010 transfer learning and unfrozen 0.1x LR spatial CNNs) on the shared 3-minute (`180s`) horizon.
-- **Sonar Live Visual Dashboard:** Connect live streams, DOM/Heatmap `AIR` absorption/spoof highlights, and competing 3-minute model probability gauges into the local web UI.
+
+- **Multi-venue recorder and tier engine:** Moomoo OpenD (NYSE ArcaBook L2) and IBKR `ib_async` (Nasdaq TotalView L2) under the 600-second minimum L2 dwell lock and dual-pool slot router.
+- **NMSU `simurgh` H100 runs:** `RF/XGBoost`, `LSTM-Attention` (60 one-minute bars), and `DeepLOB` (100 ms L2 lookback, FI-2010 transfer learning, 0.1x LR on unfrozen CNN) on the shared 180 s horizon.
+- **Sonar live dashboard:** live streams, AIR absorption highlights, and model probability gauges in the local web UI.
