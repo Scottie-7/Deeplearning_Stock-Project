@@ -1,3 +1,4 @@
+from datetime import date
 """
 SONAR (Stock Project) - Stage 5 Refined Data Preprocessing & Multi-Model Solution
 """
@@ -292,7 +293,8 @@ def run_ps5_pipeline(symbol: str = "SONAR_SMCAP", n_ticks: int = 1000) -> dict:
         prev_bid_px, prev_bid_sz = bid_px, bid_sz
         prev_ask_px, prev_ask_sz = ask_px, ask_sz
 
-    out_dir = os.path.join(os.path.dirname(__file__), "recordings", "2026-10-30", "regular", symbol)
+    rec_date = os.environ.get("SONAR_RECORDING_DATE", date.today().isoformat())
+    out_dir = os.path.join(os.path.dirname(__file__), "recordings", rec_date, "regular", symbol)
     l1_path = atomic_parquet_flush(l1_rows, get_l1_schema(), out_dir, "l1_quotes")
     l2_path = atomic_parquet_flush(l2_rows, get_l2_wide_schema(), out_dir, "l2_snapshots")
 

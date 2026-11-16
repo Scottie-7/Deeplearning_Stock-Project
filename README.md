@@ -1,82 +1,30 @@
-# Deep Learning Stock Project: Data Pipeline, Preprocessing & Baseline Engine
+# Deep Learning Stock Project: Data Pipeline, Preprocessing & FI-2010 LOB Benchmark
 
-**Author:** Scottie Dunnavan
-**Course:** CSCI 4425/5425 Introduction to Deep Learning
+**Author:** Scottie Dunnavan | **Course:** CSCI 4425/5425 Introduction to Deep Learning
 
-Dataset specs, live broker adapters, crash-safe Parquet persistence, and LOB preprocessing and feature pipeline for the Stock Project. Architecture context: `report_ps5.pdf` (Stage 5), `report_ps4.pdf` (Stage 4), `report_ps3.pdf` (Stage 3).
+Limit Order Book (LOB) preprocessing, atomic Parquet persistence, spatial representation engineering (`sonar_norm`), post-hoc temperature scaling calibration, and 3-seed deep learning & tabular benchmark evaluation on the Nasdaq Nordic **FI-2010** dataset (`report_ps6.pdf`).
 
 ## Repository Layout
+- `data/data.txt`: Dataset links and specifications (FI-2010, Databento ITCH, U.S. small/mid-cap live spec).
+- `src/main.py` & `src/preprocessing.py`: Offline synthetic smoke-test pipeline (atomic Parquet writes, Lee-Ready classifier, 10-level OFI, AIR, triple-barrier labels, baseline evaluator; requires zero API keys).
+- `src/fi2010/`: Stage 6 FI-2010 deep learning (`DeepLOB`, `LSTM-Attention`) and tabular (`XGBoost`, `Random Forest`, `MLP`, `Majority Class`) training, calibration, and evaluation suite executed on NMSU `simurgh` (NVIDIA H100 NVL).
+- `logs/fi2010/perstock_all_models.log`: Verbatim 3-seed (`Seeds 42, 43, 44`) training and evaluation log under the per-stock 80/20 split (`100`-row purge per stock) and boundary-masked windows (`T=100`).
+- `requirements.txt`: Pinned core Python dependencies for offline preprocessing and evaluation.
 
-- `data/data.txt`: dataset links and specs (FI-2010, Databento ITCH pull, self-recorded U.S. small-cap live data).
-- `src/`: preprocessing, Parquet recording, features, labeling, baselines, live streaming.
-- `report_ps5.pdf`: Stage 5 report. `report_ps4.pdf`, `report_ps3.pdf`: earlier stages.
+## Stage 6 FI-2010 3-Seed Benchmark (`T=100`, `138,102` Clean Test Windows, `ddof=1`)
 
-## Current Status: Stage 5 (`ps5-sol2`)
-
-Implemented:
-- Atomic `.parquet` writes (temp file, then `os.replace()`) with zstd. `l1_quotes` (18 columns) and wide `l2_snapshots` (47 columns, 10 levels, `session`, `book_age_ms`).
-- Lee-Ready trade side (+1 / -1 / 0) with tick-test fallback.
-- Features: relative price distance, 10-level price-keyed OFI, AIR (single-venue definition and threshold flags pending), micro-price divergence.
-- Triple-barrier labels (Down=0, Neutral=1, Up=2), 50-tick horizon, 15 bps minimum barrier.
-- Tensors: spatial (Batch, 1, 100, 40), auxiliary flow (Batch, 100, 16), tabular (Batch, 56).
-- Chronological 70/30 split with a 50-sample purge.
-- Models: majority-class, Random Forest (150 trees, balanced), MLP (128, 64). Metrics: macro-F1, per-class F1, 3x3 confusion matrix.
-
-Not implemented: LSTM-Attention and DeepLOB (PyTorch), temperature scaling and ECE, locked v1.2 shapes (Batch, 63), (Batch, 60, 10), (Batch, 1, 600, 40) with (Batch, 600, 20), venue-matched AIR and its flags (ICEBERG_ABSORPTION, UNEXECUTED_DEPLETION), 5-minute buffered flush and bounded queue. Full list: report Section 6.
-
-## File Structure (`src/`)
-
-| File | Purpose |
-| :--- | :--- |
-| `src/main.py` | Entry point. Runs the offline pipeline by default, no API keys. `--live` starts Tastytrade streaming. |
-| `src/preprocessing.py` | Parquet writer, Lee-Ready classifier, feature calculators, triple-barrier labeler, chronological evaluator. |
-| `src/providers/__init__.py` | Provider package initializer. |
-| `src/providers/base.py` | `MarketDataSource` abstract interface (`connect`, `stream_data`). |
-| `src/providers/tastytrade.py` | Tastytrade OAuth2 and live L1 adapter. |
+| Model (`Seeds 42, 43, 44`) | Input Representation | Val Macro-F1 | Test Macro-F1 | Test Accuracy | Temp ($T$) | ECE (Raw -> Cal) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **XGBoost (`2000` cap, ES=30)** | `sonar_norm` 160f (lags 10/50/99) | `0.7601 +/- 0.0010` | **`0.7995 +/- 0.0010`** | **`0.8002 +/- 0.0011`** | `1.04 +/- 0.01` | `0.0612 -> 0.0687` |
+| **Random Forest (`150` trees)** | `sonar_norm` 160f (lags 10/50/99) | `0.7418 +/- 0.0006` | `0.7870 +/- 0.0001` | `0.7892 +/- 0.0002` | `0.75 +/- 0.00` | `0.1437 -> 0.0848` |
+| **DeepLOB (`decpre` raw, 25 ep)** | Raw FI-2010 `(1, 100, 40)` | `0.7135 +/- 0.0163` | `0.7349 +/- 0.0176` | `0.7353 +/- 0.0184` | `1.47 +/- 0.25` | `0.0649 -> 0.0151` |
+| **DeepLOB (`sonar_norm`, 25 ep)** | `sonar_norm` `(1, 100, 40)` | `0.7195 +/- 0.0044` | `0.7330 +/- 0.0033` | `0.7319 +/- 0.0033` | `1.43 +/- 0.18` | `0.0689 -> 0.0114` |
+| **LSTM-Attention v3 (25 ep)** | `sonar_norm` `(100, 40)` unscaled | `0.6615 +/- 0.0022` | `0.6688 +/- 0.0022` | `0.6683 +/- 0.0028` | `1.57 +/- 0.17` | `0.1015 -> 0.0078` |
+| **MLP (`128, 64`, standardized)** | `sonar_norm` 160f (lags 10/50/99) | `0.6446 +/- 0.0078` | `0.6617 +/- 0.0090` | `0.6609 +/- 0.0089` | `1.86 +/- 0.15` | `0.1056 -> 0.0311` |
+| **XGBoost Ablation (no lags)** | `sonar_norm` 40f snapshot only | `0.4036 +/- 0.0027` | `0.3463 +/- 0.0013` | `0.4140 +/- 0.0008` | `1.13 +/- 0.02` | `0.1152 -> 0.0955` |
+| **Majority Class Baseline** | Prior (`Up = 0`) | — | `0.1699` | `0.3421` | — | — |
 
 ## Setup & Execution
-
-### 1. Install
-
-    cd src
-    python -m venv venv
-    source venv/bin/activate  # Windows: .\venv\Scripts\Activate.ps1
-    pip install numpy pyarrow scikit-learn
-
-Live mode only: `pip install aiohttp websockets python-dotenv rich`
-
-`preprocessing.py` has pure-NumPy fallbacks if `pyarrow` or `scikit-learn` is missing.
-
-### 2. Run (default, no `.env` or API keys)
-
-    cd src
-    python main.py
-
-Writes Parquet partitions to `src/recordings/` and prints the model comparison table and confusion matrices (Majority, Random Forest, MLP). Data is synthetic. The generator ties order-book imbalance and trade side to the next price move, so scores verify the pipeline runs end to end, not market predictability. See report Section 5.
-
-### 3. Live Tastytrade L1 Streaming (optional)
-
-Brokerage sessions enforce single-active-session or single-device limits, and live recording runs across premarket, regular, and after-hours sessions. Sharing `.env` credentials during grading could disconnect the recorder or invalidate its token. Default execution is therefore isolated from broker sessions.
-
-Create a git-ignored `src/.env`:
-
-    TASTY_CLIENT_ID=your_client_id
-    TASTY_CLIENT_SECRET=your_client_secret
-    TASTY_REFRESH_TOKEN=your_refresh_token
-    TASTY_ENV=production
-
-Never commit `.env`, client secrets, or refresh tokens. Start streaming:
-
-    python main.py --live
-
-## Known Issues
-
-- Default barrier multiplier is `k_vol=0.45`. The locked spec uses initial `k=1.0`, fit on the train split. Align before V2.
-- A level that vanishes without scrolling out of the top 10 is assigned to the nearest current level (OFI approximation).
-- Stage 5 code has not been executed end to end. Confirm `python main.py` runs before relying on this README's claims.
-
-## Next Milestones (Stage 1A / 1B Roadmap)
-
-- **Multi-venue recorder and tier engine:** Moomoo OpenD (NYSE ArcaBook L2) and IBKR `ib_async` (Nasdaq TotalView L2) under the 600-second minimum L2 dwell lock and dual-pool slot router.
-- **NMSU `simurgh` H100 runs:** `RF/XGBoost`, `LSTM-Attention` (60 one-minute bars), and `DeepLOB` (100 ms L2 lookback, FI-2010 transfer learning, 0.1x LR on unfrozen CNN) on the shared 180 s horizon.
-- **Sonar live dashboard:** live streams, AIR absorption highlights, and model probability gauges in the local web UI.
+1. **Install:** `python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt`
+2. **Run Offline Synthetic Smoke Test (No API Keys):** `python src/main.py`
+3. **Reproduce FI-2010 Per-Stock Benchmark:** `CUBLAS_WORKSPACE_CONFIG=:4096:8 PYTHONPATH=. python -u src/fi2010/run_perstock_clean.py`

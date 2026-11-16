@@ -1,0 +1,486 @@
+nohup: ignoring input
+Device: cuda:1 (NVIDIA H100 NVL (cuda:1))
+  [Transform Check] Raw Row 0 [ask_p1, ask_v1, bid_p1, bid_v1]  : [0.2615  0.00353 0.2606  0.00326]
+  [Transform Check] Norm Row 0 [ask_p1, ask_v1, bid_p1, bid_v1] : [ 1.7238655e-03  5.8692970e+00 -1.7237513e-03  5.7899604e+00]
+  [Transform Check] v*1e5 integer fraction (<0.01 residual)     : 100.0000%
+  [Transform Check] v*1e5 mod 10 unique digits (proves 1e-5)    : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+=== [0] PER-STOCK 80/20 SPLIT & BOUNDARY-MASKED WINDOW AUDIT ===
+  Train_CF_7 Stock Block Boundaries: [0, 23336, 68210, 106759, 161434, 254750]
+    Stock 1: Train rows=18,568 (windows=18,469) | Purge=100 | Val rows= 4,668 (windows= 4,569)
+    Stock 2: Train rows=35,799 (windows=35,700) | Purge=100 | Val rows= 8,975 (windows= 8,876)
+    Stock 3: Train rows=30,739 (windows=30,640) | Purge=100 | Val rows= 7,710 (windows= 7,611)
+    Stock 4: Train rows=43,640 (windows=43,541) | Purge=100 | Val rows=10,935 (windows=10,836)
+    Stock 5: Train rows=74,552 (windows=74,453) | Purge=100 | Val rows=18,664 (windows=18,565)
+  TRAIN (5 stocks) | Raw Rows: 203,298 [Up: 82,382 (40.5%), Stat: 40,244 (19.8%), Down: 80,672 (39.7%)]
+                   | T=100 Win: 202,803 [Up: 82,062 (40.5%), Stat: 40,164 (19.8%), Down: 80,577 (39.7%)]
+  VAL   (5 stocks) | Raw Rows:  50,952 [Up: 20,883 (41.0%), Stat:  9,132 (17.9%), Down: 20,937 (41.1%)]
+                   | T=100 Win:  50,457 [Up: 20,680 (41.0%), Stat:  9,069 (18.0%), Down: 20,708 (41.0%)]
+  TEST (15 blocks) | Raw Rows: 139,587 [Up: 47,976 (34.4%), Stat: 48,060 (34.4%), Down: 43,551 (31.2%)]
+                   | T=100 Win: 138,102 [Up: 47,250 (34.2%), Stat: 47,652 (34.5%), Down: 43,200 (31.3%)]
+
+=== [1] Majority Class Baseline (Per-Stock Split, T=100) ===
+  Majority Class: Test Macro-F1=0.1699 | Acc=0.3421
+                precision    recall  f1-score   support
+
+        Up (0)     0.3421    1.0000    0.5098     47250
+Stationary (1)     0.0000    0.0000    0.0000     47652
+      Down (2)     0.0000    0.0000    0.0000     43200
+
+      accuracy                         0.3421    138102
+     macro avg     0.1140    0.3333    0.1699    138102
+  weighted avg     0.1171    0.3421    0.1744    138102
+
+Confusion Matrix:
+ [[47250     0     0]
+ [47652     0     0]
+ [43200     0     0]]
+
+=== [2] Random Forest (150 trees, balanced, 160 feats, Seeds 42, 43, 44) ===
+  PerStock RF seed 42: Val F1=0.7425 | Temp=0.75 | ECE raw=0.1437 -> cal=0.0849 | Test Macro-F1=0.7871 | Acc=0.7894
+                precision    recall  f1-score   support
+
+        Up (0)     0.8010    0.7459    0.7725     47250
+Stationary (1)     0.7853    0.8808    0.8303     47652
+      Down (2)     0.7822    0.7361    0.7584     43200
+
+      accuracy                         0.7894    138102
+     macro avg     0.7895    0.7876    0.7871    138102
+  weighted avg     0.7897    0.7894    0.7881    138102
+
+Confusion Matrix:
+ [[35245  5846  6159]
+ [ 2983 41974  2695]
+ [ 5772  5629 31799]]
+  PerStock RF seed 43: Val F1=0.7416 | Temp=0.75 | ECE raw=0.1434 -> cal=0.0841 | Test Macro-F1=0.7869 | Acc=0.7892
+  PerStock RF seed 44: Val F1=0.7414 | Temp=0.75 | ECE raw=0.1439 -> cal=0.0855 | Test Macro-F1=0.7869 | Acc=0.7891
+  --- 3-Seed Summary: PerStock Random Forest (sample std, ddof=1, n=3) ---
+    PerStock Random Forest val_f1 : 0.7418 +/- 0.0006
+    PerStock Random Forest f1     : 0.7870 +/- 0.0001
+    PerStock Random Forest acc    : 0.7892 +/- 0.0002
+    PerStock Random Forest T      : 0.7500 +/- 0.0000
+    PerStock Random Forest ece_raw: 0.1437 +/- 0.0003
+    PerStock Random Forest ece_cal: 0.0848 +/- 0.0007
+
+=== [3] MLP (128, 64, standardized, max_iter=200, 160 feats, Seeds 42, 43, 44) ===
+  MLP seed 42 converged in n_iter_=52 / 200
+  PerStock MLP seed 42: Val F1=0.6425 | Temp=1.93 | ECE raw=0.1135 -> cal=0.0322 | Test Macro-F1=0.6616 | Acc=0.6607
+                precision    recall  f1-score   support
+
+        Up (0)     0.6369    0.6788    0.6572     47250
+Stationary (1)     0.7880    0.6058    0.6850     47652
+      Down (2)     0.5928    0.7014    0.6425     43200
+
+      accuracy                         0.6607    138102
+     macro avg     0.6726    0.6620    0.6616    138102
+  weighted avg     0.6752    0.6607    0.6622    138102
+
+Confusion Matrix:
+ [[32074  3990 11186]
+ [ 9162 28866  9624]
+ [ 9123  3778 30299]]
+  MLP seed 43 converged in n_iter_=35 / 200
+  PerStock MLP seed 43: Val F1=0.6532 | Temp=1.69 | ECE raw=0.0843 -> cal=0.0343 | Test Macro-F1=0.6707 | Acc=0.6699
+  MLP seed 44 converged in n_iter_=55 / 200
+  PerStock MLP seed 44: Val F1=0.6380 | Temp=1.96 | ECE raw=0.1189 -> cal=0.0270 | Test Macro-F1=0.6528 | Acc=0.6521
+  --- 3-Seed Summary: PerStock MLP (128, 64) (sample std, ddof=1, n=3) ---
+    PerStock MLP (128, 64) val_f1 : 0.6446 +/- 0.0078
+    PerStock MLP (128, 64) f1     : 0.6617 +/- 0.0090
+    PerStock MLP (128, 64) acc    : 0.6609 +/- 0.0089
+    PerStock MLP (128, 64) T      : 1.8600 +/- 0.1480
+    PerStock MLP (128, 64) ece_raw: 0.1056 +/- 0.0186
+    PerStock MLP (128, 64) ece_cal: 0.0311 +/- 0.0038
+
+=== [4] XGBoost (160 feats, lags 10/50/99, 2000 cap, early_stopping=30, Seeds 42, 43, 44) ===
+  XGBoost (160 feats) seed 42 best_iteration=953
+/home/ugrad14/sdunnavan/sonar_track_c/venv/lib/python3.14/site-packages/xgboost/core.py:569: UserWarning: [02:27:01] WARNING: /__w/xgboost/xgboost/src/common/error_msg.cc:62: Falling back to prediction using DMatrix due to mismatched devices. This might lead to higher memory usage and slower performance. XGBoost is running on: cuda:1, while the input data is on: cpu.
+Potential solutions:
+- Use a data structure that matches the device ordinal in the booster.
+- Set the device for booster before call to inplace_predict.
+
+This warning will only be shown once.
+
+  return func(**kwargs)
+  PerStock XGBoost (160f) seed 42: Val F1=0.7597 | Temp=1.04 | ECE raw=0.0614 -> cal=0.0689 | Test Macro-F1=0.7994 | Acc=0.8000
+                precision    recall  f1-score   support
+
+        Up (0)     0.7979    0.7878    0.7928     47250
+Stationary (1)     0.8180    0.8265    0.8222     47652
+      Down (2)     0.7822    0.7841    0.7831     43200
+
+      accuracy                         0.8000    138102
+     macro avg     0.7994    0.7995    0.7994    138102
+  weighted avg     0.7999    0.8000    0.7999    138102
+
+Confusion Matrix:
+ [[37222  4480  5548]
+ [ 4381 39386  3885]
+ [ 5045  4284 33871]]
+  XGBoost (160 feats) seed 43 best_iteration=824
+  PerStock XGBoost (160f) seed 43: Val F1=0.7612 | Temp=1.03 | ECE raw=0.0630 -> cal=0.0687 | Test Macro-F1=0.8006 | Acc=0.8013
+  XGBoost (160 feats) seed 44 best_iteration=1060
+  PerStock XGBoost (160f) seed 44: Val F1=0.7595 | Temp=1.05 | ECE raw=0.0591 -> cal=0.0684 | Test Macro-F1=0.7986 | Acc=0.7992
+  --- 3-Seed Summary: PerStock XGBoost (160f) (sample std, ddof=1, n=3) ---
+    PerStock XGBoost (160f) val_f1 : 0.7601 +/- 0.0010
+    PerStock XGBoost (160f) f1     : 0.7995 +/- 0.0010
+    PerStock XGBoost (160f) acc    : 0.8002 +/- 0.0011
+    PerStock XGBoost (160f) T      : 1.0400 +/- 0.0100
+    PerStock XGBoost (160f) ece_raw: 0.0612 +/- 0.0020
+    PerStock XGBoost (160f) ece_cal: 0.0687 +/- 0.0002
+
+=== [5] XGBoost Snapshot-Only Ablation (40 feats, LAGS=(), Seeds 42, 43, 44) ===
+  XGBoost (40 feats, no lags) seed 42 best_iteration=234
+  PerStock XGBoost (40f) seed 42: Val F1=0.4014 | Temp=1.11 | ECE raw=0.1115 -> cal=0.0943 | Test Macro-F1=0.3477 | Acc=0.4149
+                precision    recall  f1-score   support
+
+        Up (0)     0.4265    0.5834    0.4928     47250
+Stationary (1)     0.6023    0.0285    0.0544     47652
+      Down (2)     0.3984    0.6568    0.4960     43200
+
+      accuracy                         0.4149    138102
+     macro avg     0.4757    0.4229    0.3477    138102
+  weighted avg     0.4784    0.4149    0.3425    138102
+
+Confusion Matrix:
+ [[27565   533 19152]
+ [22603  1357 23692]
+ [14462   363 28375]]
+  XGBoost (40 feats, no lags) seed 43 best_iteration=278
+  PerStock XGBoost (40f) seed 43: Val F1=0.4028 | Temp=1.14 | ECE raw=0.1182 -> cal=0.0964 | Test Macro-F1=0.3459 | Acc=0.4134
+  XGBoost (40 feats, no lags) seed 44 best_iteration=262
+  PerStock XGBoost (40f) seed 44: Val F1=0.4065 | Temp=1.13 | ECE raw=0.1158 -> cal=0.0957 | Test Macro-F1=0.3452 | Acc=0.4137
+  --- 3-Seed Summary: PerStock XGBoost (40f) (sample std, ddof=1, n=3) ---
+    PerStock XGBoost (40f) val_f1 : 0.4036 +/- 0.0027
+    PerStock XGBoost (40f) f1     : 0.3463 +/- 0.0013
+    PerStock XGBoost (40f) acc    : 0.4140 +/- 0.0008
+    PerStock XGBoost (40f) T      : 1.1267 +/- 0.0153
+    PerStock XGBoost (40f) ece_raw: 0.1152 +/- 0.0034
+    PerStock XGBoost (40f) ece_cal: 0.0955 +/- 0.0011
+
+nohup: ignoring input
+Device: cuda:1 (NVIDIA H100 NVL (cuda:1))
+  [Transform Check] Raw Row 0 [ask_p1, ask_v1, bid_p1, bid_v1]  : [0.2615  0.00353 0.2606  0.00326]
+  [Transform Check] Norm Row 0 [ask_p1, ask_v1, bid_p1, bid_v1] : [ 1.7238655e-03  5.8692970e+00 -1.7237513e-03  5.7899604e+00]
+  [Transform Check] v*1e5 integer fraction (<0.01 residual)     : 100.0000%
+  [Transform Check] v*1e5 mod 10 unique digits (proves 1e-5)    : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+=== [6] LSTM-Attention v3 (Per-Stock Split, unscaled sonar_norm, T=100, 25 ep, Seeds 42, 43, 44) ===
+[PerStock LSTM-Att v3 seed 42] Ep 01/25 | Train Loss: 1.0490 | Val Acc: 0.4086 | Val Macro-F1: 0.3385 | 7.4s
+[PerStock LSTM-Att v3 seed 42] Ep 02/25 | Train Loss: 0.9609 | Val Acc: 0.5199 | Val Macro-F1: 0.5156 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 03/25 | Train Loss: 0.8794 | Val Acc: 0.5599 | Val Macro-F1: 0.5702 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 04/25 | Train Loss: 0.8569 | Val Acc: 0.5700 | Val Macro-F1: 0.5800 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 05/25 | Train Loss: 0.8276 | Val Acc: 0.6026 | Val Macro-F1: 0.6051 | 4.6s
+[PerStock LSTM-Att v3 seed 42] Ep 06/25 | Train Loss: 0.7896 | Val Acc: 0.6193 | Val Macro-F1: 0.6184 | 4.4s
+[PerStock LSTM-Att v3 seed 42] Ep 07/25 | Train Loss: 0.7555 | Val Acc: 0.6395 | Val Macro-F1: 0.6339 | 4.4s
+[PerStock LSTM-Att v3 seed 42] Ep 08/25 | Train Loss: 0.7247 | Val Acc: 0.6508 | Val Macro-F1: 0.6460 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 09/25 | Train Loss: 0.6970 | Val Acc: 0.6573 | Val Macro-F1: 0.6510 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 10/25 | Train Loss: 0.6685 | Val Acc: 0.6581 | Val Macro-F1: 0.6504 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 11/25 | Train Loss: 0.6435 | Val Acc: 0.6631 | Val Macro-F1: 0.6547 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 12/25 | Train Loss: 0.6190 | Val Acc: 0.6588 | Val Macro-F1: 0.6520 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 13/25 | Train Loss: 0.5991 | Val Acc: 0.6568 | Val Macro-F1: 0.6500 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 14/25 | Train Loss: 0.5999 | Val Acc: 0.6668 | Val Macro-F1: 0.6601 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 15/25 | Train Loss: 0.5645 | Val Acc: 0.6629 | Val Macro-F1: 0.6555 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 16/25 | Train Loss: 0.5500 | Val Acc: 0.6666 | Val Macro-F1: 0.6573 | 4.4s
+[PerStock LSTM-Att v3 seed 42] Ep 17/25 | Train Loss: 0.5346 | Val Acc: 0.6610 | Val Macro-F1: 0.6537 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 18/25 | Train Loss: 0.5214 | Val Acc: 0.6643 | Val Macro-F1: 0.6562 | 4.4s
+[PerStock LSTM-Att v3 seed 42] Ep 19/25 | Train Loss: 0.5106 | Val Acc: 0.6581 | Val Macro-F1: 0.6486 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 20/25 | Train Loss: 0.5922 | Val Acc: 0.6569 | Val Macro-F1: 0.6500 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 21/25 | Train Loss: 0.5203 | Val Acc: 0.6631 | Val Macro-F1: 0.6553 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 22/25 | Train Loss: 0.4961 | Val Acc: 0.6674 | Val Macro-F1: 0.6557 | 4.5s
+[PerStock LSTM-Att v3 seed 42] Ep 23/25 | Train Loss: 0.4841 | Val Acc: 0.6600 | Val Macro-F1: 0.6521 | 4.4s
+[PerStock LSTM-Att v3 seed 42] Ep 24/25 | Train Loss: 0.4769 | Val Acc: 0.6603 | Val Macro-F1: 0.6529 | 4.6s
+[PerStock LSTM-Att v3 seed 42] Ep 25/25 | Train Loss: 0.4676 | Val Acc: 0.6630 | Val Macro-F1: 0.6531 | 4.5s
+--> [PerStock LSTM-Att v3 seed 42] best Val F1=0.6601 at Ep 14/25
+  PerStock LSTM-Att v3 seed 42 (ep 14): Val F1=0.6601 | Temp=1.39 | ECE raw=0.0786 -> cal=0.0097 | Test Macro-F1=0.6686 | Acc=0.6677
+                precision    recall  f1-score   support
+
+        Up (0)     0.6279    0.6869    0.6561     47250
+Stationary (1)     0.7972    0.6627    0.7238     47652
+      Down (2)     0.6020    0.6521    0.6260     43200
+
+      accuracy                         0.6677    138102
+     macro avg     0.6757    0.6673    0.6686    138102
+  weighted avg     0.6782    0.6677    0.6700    138102
+
+Confusion Matrix:
+ [[32458  4126 10666]
+ [ 8112 31581  7959]
+ [11121  3909 28170]]
+[PerStock LSTM-Att v3 seed 43] Ep 01/25 | Train Loss: 1.0503 | Val Acc: 0.4099 | Val Macro-F1: 0.1938 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 02/25 | Train Loss: 0.9882 | Val Acc: 0.5366 | Val Macro-F1: 0.5367 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 03/25 | Train Loss: 0.8834 | Val Acc: 0.5600 | Val Macro-F1: 0.5683 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 04/25 | Train Loss: 0.8447 | Val Acc: 0.5990 | Val Macro-F1: 0.6021 | 4.6s
+[PerStock LSTM-Att v3 seed 43] Ep 05/25 | Train Loss: 0.8044 | Val Acc: 0.6181 | Val Macro-F1: 0.6172 | 4.6s
+[PerStock LSTM-Att v3 seed 43] Ep 06/25 | Train Loss: 0.7694 | Val Acc: 0.6194 | Val Macro-F1: 0.6172 | 4.6s
+[PerStock LSTM-Att v3 seed 43] Ep 07/25 | Train Loss: 0.7341 | Val Acc: 0.6500 | Val Macro-F1: 0.6434 | 4.7s
+[PerStock LSTM-Att v3 seed 43] Ep 08/25 | Train Loss: 0.7018 | Val Acc: 0.6593 | Val Macro-F1: 0.6528 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 09/25 | Train Loss: 0.6719 | Val Acc: 0.6600 | Val Macro-F1: 0.6536 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 10/25 | Train Loss: 0.6450 | Val Acc: 0.6595 | Val Macro-F1: 0.6536 | 4.7s
+[PerStock LSTM-Att v3 seed 43] Ep 11/25 | Train Loss: 0.6197 | Val Acc: 0.6683 | Val Macro-F1: 0.6599 | 4.6s
+[PerStock LSTM-Att v3 seed 43] Ep 12/25 | Train Loss: 0.5996 | Val Acc: 0.6620 | Val Macro-F1: 0.6553 | 4.6s
+[PerStock LSTM-Att v3 seed 43] Ep 13/25 | Train Loss: 0.5788 | Val Acc: 0.6621 | Val Macro-F1: 0.6522 | 4.6s
+[PerStock LSTM-Att v3 seed 43] Ep 14/25 | Train Loss: 0.5599 | Val Acc: 0.6690 | Val Macro-F1: 0.6611 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 15/25 | Train Loss: 0.5449 | Val Acc: 0.6658 | Val Macro-F1: 0.6556 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 16/25 | Train Loss: 0.5640 | Val Acc: 0.6636 | Val Macro-F1: 0.6544 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 17/25 | Train Loss: 0.5204 | Val Acc: 0.6674 | Val Macro-F1: 0.6583 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 18/25 | Train Loss: 0.5068 | Val Acc: 0.6656 | Val Macro-F1: 0.6567 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 19/25 | Train Loss: 0.4991 | Val Acc: 0.6654 | Val Macro-F1: 0.6554 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 20/25 | Train Loss: 0.4861 | Val Acc: 0.6671 | Val Macro-F1: 0.6577 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 21/25 | Train Loss: 0.4791 | Val Acc: 0.6708 | Val Macro-F1: 0.6611 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 22/25 | Train Loss: 0.4711 | Val Acc: 0.6605 | Val Macro-F1: 0.6506 | 4.4s
+[PerStock LSTM-Att v3 seed 43] Ep 23/25 | Train Loss: 0.4618 | Val Acc: 0.6726 | Val Macro-F1: 0.6614 | 4.5s
+[PerStock LSTM-Att v3 seed 43] Ep 24/25 | Train Loss: 0.4547 | Val Acc: 0.6669 | Val Macro-F1: 0.6561 | 4.6s
+[PerStock LSTM-Att v3 seed 43] Ep 25/25 | Train Loss: 0.4499 | Val Acc: 0.6748 | Val Macro-F1: 0.6640 | 4.5s
+--> [PerStock LSTM-Att v3 seed 43] best Val F1=0.6640 at Ep 25/25
+  PerStock LSTM-Att v3 seed 43 (ep 25): Val F1=0.6640 | Temp=1.72 | ECE raw=0.1230 -> cal=0.0075 | Test Macro-F1=0.6667 | Acc=0.6658
+[PerStock LSTM-Att v3 seed 44] Ep 01/25 | Train Loss: 1.0498 | Val Acc: 0.4099 | Val Macro-F1: 0.1938 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 02/25 | Train Loss: 1.0404 | Val Acc: 0.4174 | Val Macro-F1: 0.3411 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 03/25 | Train Loss: 0.9507 | Val Acc: 0.5344 | Val Macro-F1: 0.5444 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 04/25 | Train Loss: 0.8785 | Val Acc: 0.5515 | Val Macro-F1: 0.5608 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 05/25 | Train Loss: 0.8545 | Val Acc: 0.5819 | Val Macro-F1: 0.5877 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 06/25 | Train Loss: 0.8165 | Val Acc: 0.6163 | Val Macro-F1: 0.6174 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 07/25 | Train Loss: 0.7781 | Val Acc: 0.6281 | Val Macro-F1: 0.6252 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 08/25 | Train Loss: 0.7432 | Val Acc: 0.6472 | Val Macro-F1: 0.6427 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 09/25 | Train Loss: 0.7068 | Val Acc: 0.6567 | Val Macro-F1: 0.6507 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 10/25 | Train Loss: 0.6761 | Val Acc: 0.6650 | Val Macro-F1: 0.6565 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 11/25 | Train Loss: 0.6468 | Val Acc: 0.6557 | Val Macro-F1: 0.6496 | 4.5s
+[PerStock LSTM-Att v3 seed 44] Ep 12/25 | Train Loss: 0.6280 | Val Acc: 0.6630 | Val Macro-F1: 0.6567 | 4.5s
+[PerStock LSTM-Att v3 seed 44] Ep 13/25 | Train Loss: 0.6017 | Val Acc: 0.6659 | Val Macro-F1: 0.6591 | 4.5s
+[PerStock LSTM-Att v3 seed 44] Ep 14/25 | Train Loss: 0.5824 | Val Acc: 0.6674 | Val Macro-F1: 0.6603 | 4.5s
+[PerStock LSTM-Att v3 seed 44] Ep 15/25 | Train Loss: 0.5648 | Val Acc: 0.6660 | Val Macro-F1: 0.6587 | 4.5s
+[PerStock LSTM-Att v3 seed 44] Ep 16/25 | Train Loss: 0.5480 | Val Acc: 0.6603 | Val Macro-F1: 0.6532 | 4.5s
+[PerStock LSTM-Att v3 seed 44] Ep 17/25 | Train Loss: 0.5343 | Val Acc: 0.6674 | Val Macro-F1: 0.6604 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 18/25 | Train Loss: 0.5198 | Val Acc: 0.6672 | Val Macro-F1: 0.6599 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 19/25 | Train Loss: 0.5100 | Val Acc: 0.6672 | Val Macro-F1: 0.6604 | 4.6s
+[PerStock LSTM-Att v3 seed 44] Ep 20/25 | Train Loss: 0.4972 | Val Acc: 0.6640 | Val Macro-F1: 0.6550 | 4.6s
+[PerStock LSTM-Att v3 seed 44] Ep 21/25 | Train Loss: 0.4870 | Val Acc: 0.6637 | Val Macro-F1: 0.6548 | 4.5s
+[PerStock LSTM-Att v3 seed 44] Ep 22/25 | Train Loss: 0.5317 | Val Acc: 0.6650 | Val Macro-F1: 0.6566 | 4.4s
+[PerStock LSTM-Att v3 seed 44] Ep 23/25 | Train Loss: 0.4932 | Val Acc: 0.6662 | Val Macro-F1: 0.6562 | 4.5s
+[PerStock LSTM-Att v3 seed 44] Ep 24/25 | Train Loss: 0.4695 | Val Acc: 0.6607 | Val Macro-F1: 0.6515 | 4.5s
+[PerStock LSTM-Att v3 seed 44] Ep 25/25 | Train Loss: 0.4579 | Val Acc: 0.6581 | Val Macro-F1: 0.6484 | 4.5s
+--> [PerStock LSTM-Att v3 seed 44] best Val F1=0.6604 at Ep 19/25
+  PerStock LSTM-Att v3 seed 44 (ep 19): Val F1=0.6604 | Temp=1.59 | ECE raw=0.1029 -> cal=0.0062 | Test Macro-F1=0.6710 | Acc=0.6714
+Saved best-val PerStock LSTM-Att v3 checkpoint (Seed 43, Ep 25, Val F1=0.6640) -> /home/ugrad14/sdunnavan/sonar_track_c/data/fi2010/perstock_lstm_attention_v3_sonar_norm_T100_k100.pt
+  --- 3-Seed Summary: PerStock LSTM-Att v3 (sample std, ddof=1, n=3) ---
+    PerStock LSTM-Att v3 val_f1 : 0.6615 +/- 0.0022
+    PerStock LSTM-Att v3 f1     : 0.6688 +/- 0.0022
+    PerStock LSTM-Att v3 acc    : 0.6683 +/- 0.0028
+    PerStock LSTM-Att v3 T      : 1.5667 +/- 0.1662
+    PerStock LSTM-Att v3 ece_raw: 0.1015 +/- 0.0222
+    PerStock LSTM-Att v3 ece_cal: 0.0078 +/- 0.0018
+
+=== [7] DeepLOB sonar_norm T=100 (Per-Stock Split, 25 ep, Seeds 42, 43, 44) ===
+[PerStock DeepLOB sonar_norm seed 42] Ep 01/25 | Train Loss: 0.7982 | Val Acc: 0.6713 | Val Macro-F1: 0.6691 | 14.0s
+[PerStock DeepLOB sonar_norm seed 42] Ep 02/25 | Train Loss: 0.6253 | Val Acc: 0.7128 | Val Macro-F1: 0.7079 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 03/25 | Train Loss: 0.5599 | Val Acc: 0.7251 | Val Macro-F1: 0.7197 | 13.1s
+[PerStock DeepLOB sonar_norm seed 42] Ep 04/25 | Train Loss: 0.5159 | Val Acc: 0.7242 | Val Macro-F1: 0.7184 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 05/25 | Train Loss: 0.4807 | Val Acc: 0.7207 | Val Macro-F1: 0.7157 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 06/25 | Train Loss: 0.4503 | Val Acc: 0.7275 | Val Macro-F1: 0.7210 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 07/25 | Train Loss: 0.4238 | Val Acc: 0.7304 | Val Macro-F1: 0.7242 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 08/25 | Train Loss: 0.4003 | Val Acc: 0.7246 | Val Macro-F1: 0.7184 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 09/25 | Train Loss: 0.3804 | Val Acc: 0.7227 | Val Macro-F1: 0.7170 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 10/25 | Train Loss: 0.3619 | Val Acc: 0.7265 | Val Macro-F1: 0.7204 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 11/25 | Train Loss: 0.3487 | Val Acc: 0.7243 | Val Macro-F1: 0.7175 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 12/25 | Train Loss: 0.3345 | Val Acc: 0.7214 | Val Macro-F1: 0.7136 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 13/25 | Train Loss: 0.3217 | Val Acc: 0.7185 | Val Macro-F1: 0.7110 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 14/25 | Train Loss: 0.3108 | Val Acc: 0.7172 | Val Macro-F1: 0.7104 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 15/25 | Train Loss: 0.3001 | Val Acc: 0.7214 | Val Macro-F1: 0.7142 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 16/25 | Train Loss: 0.2911 | Val Acc: 0.7208 | Val Macro-F1: 0.7139 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 17/25 | Train Loss: 0.2823 | Val Acc: 0.7214 | Val Macro-F1: 0.7121 | 13.3s
+[PerStock DeepLOB sonar_norm seed 42] Ep 18/25 | Train Loss: 0.2749 | Val Acc: 0.7140 | Val Macro-F1: 0.7047 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 19/25 | Train Loss: 0.2675 | Val Acc: 0.7162 | Val Macro-F1: 0.7086 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 20/25 | Train Loss: 0.2604 | Val Acc: 0.7184 | Val Macro-F1: 0.7102 | 13.3s
+[PerStock DeepLOB sonar_norm seed 42] Ep 21/25 | Train Loss: 0.2538 | Val Acc: 0.7104 | Val Macro-F1: 0.7010 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 22/25 | Train Loss: 0.2469 | Val Acc: 0.7173 | Val Macro-F1: 0.7093 | 13.3s
+[PerStock DeepLOB sonar_norm seed 42] Ep 23/25 | Train Loss: 0.2414 | Val Acc: 0.7187 | Val Macro-F1: 0.7098 | 13.3s
+[PerStock DeepLOB sonar_norm seed 42] Ep 24/25 | Train Loss: 0.2353 | Val Acc: 0.7088 | Val Macro-F1: 0.7001 | 13.2s
+[PerStock DeepLOB sonar_norm seed 42] Ep 25/25 | Train Loss: 0.2297 | Val Acc: 0.7111 | Val Macro-F1: 0.7023 | 13.2s
+--> [PerStock DeepLOB sonar_norm seed 42] best Val F1=0.7242 at Ep 07/25
+  PerStock DeepLOB sonar_norm seed 42 (ep 7): Val F1=0.7242 | Temp=1.49 | ECE raw=0.0697 -> cal=0.0168 | Test Macro-F1=0.7319 | Acc=0.7308
+                precision    recall  f1-score   support
+
+        Up (0)     0.6851    0.7443    0.7135     47250
+Stationary (1)     0.8624    0.7155    0.7821     47652
+      Down (2)     0.6703    0.7329    0.7002     43200
+
+      accuracy                         0.7308    138102
+     macro avg     0.7393    0.7309    0.7319    138102
+  weighted avg     0.7416    0.7308    0.7330    138102
+
+Confusion Matrix:
+ [[35168  2813  9269]
+ [ 7251 34097  6304]
+ [ 8912  2628 31660]]
+[PerStock DeepLOB sonar_norm seed 43] Ep 01/25 | Train Loss: 0.8049 | Val Acc: 0.6668 | Val Macro-F1: 0.6690 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 02/25 | Train Loss: 0.6343 | Val Acc: 0.7026 | Val Macro-F1: 0.7016 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 03/25 | Train Loss: 0.5682 | Val Acc: 0.7125 | Val Macro-F1: 0.7099 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 04/25 | Train Loss: 0.5232 | Val Acc: 0.7152 | Val Macro-F1: 0.7123 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 05/25 | Train Loss: 0.4855 | Val Acc: 0.7186 | Val Macro-F1: 0.7149 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 06/25 | Train Loss: 0.4545 | Val Acc: 0.7150 | Val Macro-F1: 0.7116 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 07/25 | Train Loss: 0.4262 | Val Acc: 0.7187 | Val Macro-F1: 0.7153 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 08/25 | Train Loss: 0.4020 | Val Acc: 0.7112 | Val Macro-F1: 0.7086 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 09/25 | Train Loss: 0.3799 | Val Acc: 0.7108 | Val Macro-F1: 0.7069 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 10/25 | Train Loss: 0.3621 | Val Acc: 0.7085 | Val Macro-F1: 0.7053 | 13.3s
+[PerStock DeepLOB sonar_norm seed 43] Ep 11/25 | Train Loss: 0.3453 | Val Acc: 0.7097 | Val Macro-F1: 0.7060 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 12/25 | Train Loss: 0.3317 | Val Acc: 0.7080 | Val Macro-F1: 0.7044 | 13.3s
+[PerStock DeepLOB sonar_norm seed 43] Ep 13/25 | Train Loss: 0.3184 | Val Acc: 0.7073 | Val Macro-F1: 0.7033 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 14/25 | Train Loss: 0.3080 | Val Acc: 0.7035 | Val Macro-F1: 0.6987 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 15/25 | Train Loss: 0.2969 | Val Acc: 0.6992 | Val Macro-F1: 0.6945 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 16/25 | Train Loss: 0.2878 | Val Acc: 0.7036 | Val Macro-F1: 0.6979 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 17/25 | Train Loss: 0.2790 | Val Acc: 0.6984 | Val Macro-F1: 0.6927 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 18/25 | Train Loss: 0.2724 | Val Acc: 0.7038 | Val Macro-F1: 0.6987 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 19/25 | Train Loss: 0.2644 | Val Acc: 0.6984 | Val Macro-F1: 0.6929 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 20/25 | Train Loss: 0.2571 | Val Acc: 0.6981 | Val Macro-F1: 0.6930 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 21/25 | Train Loss: 0.2505 | Val Acc: 0.7007 | Val Macro-F1: 0.6952 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 22/25 | Train Loss: 0.2452 | Val Acc: 0.6985 | Val Macro-F1: 0.6913 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 23/25 | Train Loss: 0.2397 | Val Acc: 0.7016 | Val Macro-F1: 0.6958 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 24/25 | Train Loss: 0.2331 | Val Acc: 0.7013 | Val Macro-F1: 0.6933 | 13.2s
+[PerStock DeepLOB sonar_norm seed 43] Ep 25/25 | Train Loss: 0.2284 | Val Acc: 0.6967 | Val Macro-F1: 0.6908 | 13.2s
+--> [PerStock DeepLOB sonar_norm seed 43] best Val F1=0.7153 at Ep 07/25
+  PerStock DeepLOB sonar_norm seed 43 (ep 7): Val F1=0.7153 | Temp=1.58 | ECE raw=0.0926 -> cal=0.0066 | Test Macro-F1=0.7303 | Acc=0.7292
+[PerStock DeepLOB sonar_norm seed 44] Ep 01/25 | Train Loss: 0.7984 | Val Acc: 0.6709 | Val Macro-F1: 0.6719 | 13.1s
+[PerStock DeepLOB sonar_norm seed 44] Ep 02/25 | Train Loss: 0.6281 | Val Acc: 0.7122 | Val Macro-F1: 0.7085 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 03/25 | Train Loss: 0.5642 | Val Acc: 0.7213 | Val Macro-F1: 0.7166 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 04/25 | Train Loss: 0.5185 | Val Acc: 0.7247 | Val Macro-F1: 0.7191 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 05/25 | Train Loss: 0.4823 | Val Acc: 0.7163 | Val Macro-F1: 0.7117 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 06/25 | Train Loss: 0.4511 | Val Acc: 0.7217 | Val Macro-F1: 0.7165 | 13.3s
+[PerStock DeepLOB sonar_norm seed 44] Ep 07/25 | Train Loss: 0.4245 | Val Acc: 0.7166 | Val Macro-F1: 0.7118 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 08/25 | Train Loss: 0.4011 | Val Acc: 0.7179 | Val Macro-F1: 0.7138 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 09/25 | Train Loss: 0.3802 | Val Acc: 0.7139 | Val Macro-F1: 0.7094 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 10/25 | Train Loss: 0.3644 | Val Acc: 0.7144 | Val Macro-F1: 0.7097 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 11/25 | Train Loss: 0.3483 | Val Acc: 0.7039 | Val Macro-F1: 0.7000 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 12/25 | Train Loss: 0.3347 | Val Acc: 0.7143 | Val Macro-F1: 0.7081 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 13/25 | Train Loss: 0.3231 | Val Acc: 0.7127 | Val Macro-F1: 0.7074 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 14/25 | Train Loss: 0.3117 | Val Acc: 0.7040 | Val Macro-F1: 0.6991 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 15/25 | Train Loss: 0.3021 | Val Acc: 0.7031 | Val Macro-F1: 0.6970 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 16/25 | Train Loss: 0.2927 | Val Acc: 0.7068 | Val Macro-F1: 0.7012 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 17/25 | Train Loss: 0.2834 | Val Acc: 0.7043 | Val Macro-F1: 0.6988 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 18/25 | Train Loss: 0.2753 | Val Acc: 0.7067 | Val Macro-F1: 0.7005 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 19/25 | Train Loss: 0.2680 | Val Acc: 0.7065 | Val Macro-F1: 0.6990 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 20/25 | Train Loss: 0.2606 | Val Acc: 0.7041 | Val Macro-F1: 0.6976 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 21/25 | Train Loss: 0.2541 | Val Acc: 0.7022 | Val Macro-F1: 0.6954 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 22/25 | Train Loss: 0.2479 | Val Acc: 0.7050 | Val Macro-F1: 0.6976 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 23/25 | Train Loss: 0.2416 | Val Acc: 0.6989 | Val Macro-F1: 0.6910 | 13.2s
+[PerStock DeepLOB sonar_norm seed 44] Ep 24/25 | Train Loss: 0.2359 | Val Acc: 0.7022 | Val Macro-F1: 0.6965 | 13.1s
+[PerStock DeepLOB sonar_norm seed 44] Ep 25/25 | Train Loss: 0.2310 | Val Acc: 0.7025 | Val Macro-F1: 0.6956 | 13.2s
+--> [PerStock DeepLOB sonar_norm seed 44] best Val F1=0.7191 at Ep 04/25
+  PerStock DeepLOB sonar_norm seed 44 (ep 4): Val F1=0.7191 | Temp=1.23 | ECE raw=0.0444 -> cal=0.0109 | Test Macro-F1=0.7367 | Acc=0.7356
+Saved best-val PerStock DeepLOB sonar_norm checkpoint (Seed 42, Ep 7, Val F1=0.7242) -> /home/ugrad14/sdunnavan/sonar_track_c/data/fi2010/perstock_deeplob_sonar_norm_T100_k100.pt
+  --- 3-Seed Summary: PerStock DeepLOB sonar_norm (sample std, ddof=1, n=3) ---
+    PerStock DeepLOB sonar_norm val_f1 : 0.7195 +/- 0.0044
+    PerStock DeepLOB sonar_norm f1     : 0.7330 +/- 0.0033
+    PerStock DeepLOB sonar_norm acc    : 0.7319 +/- 0.0033
+    PerStock DeepLOB sonar_norm T      : 1.4333 +/- 0.1818
+    PerStock DeepLOB sonar_norm ece_raw: 0.0689 +/- 0.0241
+    PerStock DeepLOB sonar_norm ece_cal: 0.0114 +/- 0.0051
+
+=== [8] DeepLOB decpre T=100 (Per-Stock Split, 25 ep, Seeds 42, 43, 44) ===
+[PerStock DeepLOB decpre seed 42] Ep 01/25 | Train Loss: 0.9209 | Val Acc: 0.6034 | Val Macro-F1: 0.6037 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 02/25 | Train Loss: 0.7374 | Val Acc: 0.6553 | Val Macro-F1: 0.6512 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 03/25 | Train Loss: 0.6590 | Val Acc: 0.6833 | Val Macro-F1: 0.6792 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 04/25 | Train Loss: 0.6131 | Val Acc: 0.6913 | Val Macro-F1: 0.6853 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 05/25 | Train Loss: 0.5786 | Val Acc: 0.6949 | Val Macro-F1: 0.6905 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 06/25 | Train Loss: 0.5499 | Val Acc: 0.6959 | Val Macro-F1: 0.6913 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 07/25 | Train Loss: 0.5247 | Val Acc: 0.7062 | Val Macro-F1: 0.6992 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 08/25 | Train Loss: 0.5015 | Val Acc: 0.7013 | Val Macro-F1: 0.6950 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 09/25 | Train Loss: 0.4800 | Val Acc: 0.7039 | Val Macro-F1: 0.6979 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 10/25 | Train Loss: 0.4606 | Val Acc: 0.7041 | Val Macro-F1: 0.6990 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 11/25 | Train Loss: 0.4440 | Val Acc: 0.6985 | Val Macro-F1: 0.6929 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 12/25 | Train Loss: 0.4273 | Val Acc: 0.7019 | Val Macro-F1: 0.6959 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 13/25 | Train Loss: 0.4118 | Val Acc: 0.7021 | Val Macro-F1: 0.6959 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 14/25 | Train Loss: 0.3974 | Val Acc: 0.6982 | Val Macro-F1: 0.6906 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 15/25 | Train Loss: 0.3838 | Val Acc: 0.6955 | Val Macro-F1: 0.6907 | 13.4s
+[PerStock DeepLOB decpre seed 42] Ep 16/25 | Train Loss: 0.3709 | Val Acc: 0.6893 | Val Macro-F1: 0.6840 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 17/25 | Train Loss: 0.3611 | Val Acc: 0.6950 | Val Macro-F1: 0.6882 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 18/25 | Train Loss: 0.3510 | Val Acc: 0.6927 | Val Macro-F1: 0.6868 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 19/25 | Train Loss: 0.3390 | Val Acc: 0.6958 | Val Macro-F1: 0.6895 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 20/25 | Train Loss: 0.3308 | Val Acc: 0.6920 | Val Macro-F1: 0.6871 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 21/25 | Train Loss: 0.3224 | Val Acc: 0.6900 | Val Macro-F1: 0.6829 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 22/25 | Train Loss: 0.3133 | Val Acc: 0.6889 | Val Macro-F1: 0.6817 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 23/25 | Train Loss: 0.3069 | Val Acc: 0.6906 | Val Macro-F1: 0.6842 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 24/25 | Train Loss: 0.2983 | Val Acc: 0.6834 | Val Macro-F1: 0.6764 | 13.2s
+[PerStock DeepLOB decpre seed 42] Ep 25/25 | Train Loss: 0.2916 | Val Acc: 0.6920 | Val Macro-F1: 0.6849 | 13.2s
+--> [PerStock DeepLOB decpre seed 42] best Val F1=0.6992 at Ep 07/25
+  PerStock DeepLOB decpre seed 42 (ep 7): Val F1=0.6992 | Temp=1.30 | ECE raw=0.0525 -> cal=0.0101 | Test Macro-F1=0.7180 | Acc=0.7173
+                precision    recall  f1-score   support
+
+        Up (0)     0.6780    0.7085    0.6929     47250
+Stationary (1)     0.8257    0.7250    0.7721     47652
+      Down (2)     0.6618    0.7183    0.6889     43200
+
+      accuracy                         0.7173    138102
+     macro avg     0.7218    0.7173    0.7180    138102
+  weighted avg     0.7239    0.7173    0.7190    138102
+
+Confusion Matrix:
+ [[33478  3887  9885]
+ [ 7136 34547  5969]
+ [ 8766  3404 31030]]
+[PerStock DeepLOB decpre seed 43] Ep 01/25 | Train Loss: 0.8883 | Val Acc: 0.6065 | Val Macro-F1: 0.6073 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 02/25 | Train Loss: 0.7142 | Val Acc: 0.6730 | Val Macro-F1: 0.6733 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 03/25 | Train Loss: 0.6421 | Val Acc: 0.6695 | Val Macro-F1: 0.6709 | 13.1s
+[PerStock DeepLOB decpre seed 43] Ep 04/25 | Train Loss: 0.5968 | Val Acc: 0.7027 | Val Macro-F1: 0.6907 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 05/25 | Train Loss: 0.5593 | Val Acc: 0.6763 | Val Macro-F1: 0.6744 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 06/25 | Train Loss: 0.5265 | Val Acc: 0.6660 | Val Macro-F1: 0.6601 | 13.3s
+[PerStock DeepLOB decpre seed 43] Ep 07/25 | Train Loss: 0.4958 | Val Acc: 0.6878 | Val Macro-F1: 0.6775 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 08/25 | Train Loss: 0.4697 | Val Acc: 0.6591 | Val Macro-F1: 0.6492 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 09/25 | Train Loss: 0.4441 | Val Acc: 0.6642 | Val Macro-F1: 0.6637 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 10/25 | Train Loss: 0.4210 | Val Acc: 0.7098 | Val Macro-F1: 0.7025 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 11/25 | Train Loss: 0.4012 | Val Acc: 0.6503 | Val Macro-F1: 0.6441 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 12/25 | Train Loss: 0.3839 | Val Acc: 0.6125 | Val Macro-F1: 0.5699 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 13/25 | Train Loss: 0.3690 | Val Acc: 0.6317 | Val Macro-F1: 0.6027 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 14/25 | Train Loss: 0.3548 | Val Acc: 0.6324 | Val Macro-F1: 0.6174 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 15/25 | Train Loss: 0.3406 | Val Acc: 0.7438 | Val Macro-F1: 0.7313 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 16/25 | Train Loss: 0.3301 | Val Acc: 0.6159 | Val Macro-F1: 0.6091 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 17/25 | Train Loss: 0.3205 | Val Acc: 0.6425 | Val Macro-F1: 0.6237 | 13.1s
+[PerStock DeepLOB decpre seed 43] Ep 18/25 | Train Loss: 0.3105 | Val Acc: 0.6140 | Val Macro-F1: 0.5751 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 19/25 | Train Loss: 0.3012 | Val Acc: 0.6295 | Val Macro-F1: 0.5995 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 20/25 | Train Loss: 0.2926 | Val Acc: 0.6480 | Val Macro-F1: 0.6413 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 21/25 | Train Loss: 0.2867 | Val Acc: 0.6582 | Val Macro-F1: 0.6413 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 22/25 | Train Loss: 0.2791 | Val Acc: 0.6395 | Val Macro-F1: 0.6284 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 23/25 | Train Loss: 0.2737 | Val Acc: 0.6292 | Val Macro-F1: 0.5989 | 13.2s
+[PerStock DeepLOB decpre seed 43] Ep 24/25 | Train Loss: 0.2636 | Val Acc: 0.6584 | Val Macro-F1: 0.6504 | 13.1s
+[PerStock DeepLOB decpre seed 43] Ep 25/25 | Train Loss: 0.2611 | Val Acc: 0.6473 | Val Macro-F1: 0.6305 | 13.2s
+--> [PerStock DeepLOB decpre seed 43] best Val F1=0.7313 at Ep 15/25
+  PerStock DeepLOB decpre seed 43 (ep 15): Val F1=0.7313 | Temp=1.76 | ECE raw=0.0938 -> cal=0.0196 | Test Macro-F1=0.7531 | Acc=0.7540
+[PerStock DeepLOB decpre seed 44] Ep 01/25 | Train Loss: 0.8987 | Val Acc: 0.6094 | Val Macro-F1: 0.6099 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 02/25 | Train Loss: 0.7140 | Val Acc: 0.6520 | Val Macro-F1: 0.6494 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 03/25 | Train Loss: 0.6364 | Val Acc: 0.6920 | Val Macro-F1: 0.6876 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 04/25 | Train Loss: 0.5910 | Val Acc: 0.7056 | Val Macro-F1: 0.6999 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 05/25 | Train Loss: 0.5560 | Val Acc: 0.6995 | Val Macro-F1: 0.6875 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 06/25 | Train Loss: 0.5270 | Val Acc: 0.7145 | Val Macro-F1: 0.7081 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 07/25 | Train Loss: 0.5033 | Val Acc: 0.7182 | Val Macro-F1: 0.7099 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 08/25 | Train Loss: 0.4803 | Val Acc: 0.6998 | Val Macro-F1: 0.6913 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 09/25 | Train Loss: 0.4600 | Val Acc: 0.7116 | Val Macro-F1: 0.7041 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 10/25 | Train Loss: 0.4419 | Val Acc: 0.7142 | Val Macro-F1: 0.7045 | 13.1s
+[PerStock DeepLOB decpre seed 44] Ep 11/25 | Train Loss: 0.4232 | Val Acc: 0.6990 | Val Macro-F1: 0.6899 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 12/25 | Train Loss: 0.4068 | Val Acc: 0.6933 | Val Macro-F1: 0.6837 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 13/25 | Train Loss: 0.3924 | Val Acc: 0.7131 | Val Macro-F1: 0.7057 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 14/25 | Train Loss: 0.3768 | Val Acc: 0.7144 | Val Macro-F1: 0.7056 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 15/25 | Train Loss: 0.3666 | Val Acc: 0.6998 | Val Macro-F1: 0.6890 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 16/25 | Train Loss: 0.3524 | Val Acc: 0.6956 | Val Macro-F1: 0.6864 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 17/25 | Train Loss: 0.3425 | Val Acc: 0.6905 | Val Macro-F1: 0.6802 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 18/25 | Train Loss: 0.3332 | Val Acc: 0.6947 | Val Macro-F1: 0.6697 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 19/25 | Train Loss: 0.3237 | Val Acc: 0.7054 | Val Macro-F1: 0.6972 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 20/25 | Train Loss: 0.3157 | Val Acc: 0.6991 | Val Macro-F1: 0.6802 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 21/25 | Train Loss: 0.3073 | Val Acc: 0.7032 | Val Macro-F1: 0.6892 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 22/25 | Train Loss: 0.2991 | Val Acc: 0.7053 | Val Macro-F1: 0.6949 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 23/25 | Train Loss: 0.2917 | Val Acc: 0.7037 | Val Macro-F1: 0.6934 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 24/25 | Train Loss: 0.2865 | Val Acc: 0.7026 | Val Macro-F1: 0.6909 | 13.2s
+[PerStock DeepLOB decpre seed 44] Ep 25/25 | Train Loss: 0.2784 | Val Acc: 0.6958 | Val Macro-F1: 0.6843 | 13.2s
+--> [PerStock DeepLOB decpre seed 44] best Val F1=0.7099 at Ep 07/25
+  PerStock DeepLOB decpre seed 44 (ep 7): Val F1=0.7099 | Temp=1.35 | ECE raw=0.0486 -> cal=0.0157 | Test Macro-F1=0.7336 | Acc=0.7345
+Saved best-val PerStock DeepLOB decpre checkpoint (Seed 43, Ep 15, Val F1=0.7313) -> /home/ugrad14/sdunnavan/sonar_track_c/data/fi2010/perstock_deeplob_decpre_T100_k100.pt
+  --- 3-Seed Summary: PerStock DeepLOB decpre (sample std, ddof=1, n=3) ---
+    PerStock DeepLOB decpre val_f1 : 0.7135 +/- 0.0163
+    PerStock DeepLOB decpre f1     : 0.7349 +/- 0.0176
+    PerStock DeepLOB decpre acc    : 0.7353 +/- 0.0184
+    PerStock DeepLOB decpre T      : 1.4700 +/- 0.2524
+    PerStock DeepLOB decpre ece_raw: 0.0649 +/- 0.0251
+    PerStock DeepLOB decpre ece_cal: 0.0151 +/- 0.0048
+
+================ FINAL PER-STOCK 3-SEED MASTER SUMMARY (ddof=1, n=3) ================
+LSTM-Attention v3 (unscaled, 25ep)   | Val F1: 0.6615+/-0.0022 | Test F1: 0.6688+/-0.0022 | Acc: 0.6683+/-0.0028 | ECE: 0.1015->0.0078
+DeepLOB sonar_norm (T=100, 25ep)     | Val F1: 0.7195+/-0.0044 | Test F1: 0.7330+/-0.0033 | Acc: 0.7319+/-0.0033 | ECE: 0.0689->0.0114
+DeepLOB decpre (T=100, 25ep)         | Val F1: 0.7135+/-0.0163 | Test F1: 0.7349+/-0.0176 | Acc: 0.7353+/-0.0184 | ECE: 0.0649->0.0151
+
+ALL PER-STOCK RUNS COMPLETE IN 40.1 MINUTES.

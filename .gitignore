@@ -20,7 +20,10 @@ Thumbs.db
 .vscode/
 .idea/
 
-# --- Generated / local data (kept in Drive, not git — see data/data.txt) ---
+# --- Generated / local data & weights ---
 *.parquet
+*.pt
 *.log
+!logs/fi2010/*.log
+!logs/fi2010/*.txt
 recordings/
